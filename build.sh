@@ -12,7 +12,7 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-upstream_repo="${BAKERYOS_ISO_REPO:-git@github.com:bakeryos-project/bakeryos-iso.git}"
+upstream_repo="${BAKERYOS_ISO_REPO:-https://github.com/bakeryos-project/bakeryos-iso.git}"
 upstream_ref="${BAKERYOS_ISO_REF:-main}"
 work_root="${BAKERYOS_ISO_WORK:-${script_dir}/build}"
 
@@ -98,6 +98,7 @@ if [[ -d "${src}/.git" ]]; then
         echo "reusing existing clone: ${src}"
     else
         echo "updating clone: ${src} (${upstream_ref})"
+        git -C "${src}" remote set-url origin "${upstream_repo}"
         git -C "${src}" fetch --quiet --depth 1 origin "${upstream_ref}"
         git -C "${src}" reset --quiet --hard FETCH_HEAD
         git -C "${src}" clean -fdq
