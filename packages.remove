@@ -1,0 +1,8 @@
+# Packages dropped from the upstream packages.x86_64 list.
+# One package per line, '#' starts a comment.
+
+# Rescue tooling a development image does not need
+clonezilla
+fsarchiver
+partclone
+partimage

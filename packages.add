@@ -1,0 +1,7 @@
+# Packages appended to the upstream packages.x86_64 list.
+# One package per line, '#' starts a comment.
+
+
+base-devel
+git
+bakeryos-dev-toolbox

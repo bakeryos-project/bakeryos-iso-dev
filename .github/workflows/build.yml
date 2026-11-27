@@ -1,0 +1,57 @@
+name: BakeryOS Linux CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 0 */2 * *"
+jobs:
+  build-on-arch:
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch secrets
+        uses: dopplerhq/secrets-fetch-action@v2.0.0
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+          inject-env-vars: true
+
+      - name: Initialize Pacman keyring and update system
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Syyu --noconfirm
+
+      - name: Enable BakeryOS repository
+        run: |
+          # Inter-package dependencies (e.g. bakeryos-plymouth) live in the
+          # BakeryOS repository, which is not part of the archlinux image.
+          curl -fsSL \
+            https://raw.githubusercontent.com/bakeryos-project/bakeryos-keyring/main/src/bakeryos.gpg \
+            -o /tmp/bakeryos.gpg
+          pacman-key --init
+          pacman-key --add /tmp/bakeryos.gpg
+          pacman-key --lsign-key 5F69BC74227AA79C063AC3E34E140482891B3420
+
+          printf '\n[bakeryos]\nSigLevel = Required DatabaseOptional\nServer = https://repo.bakeryos.smtdfc.net/$arch\n' >> /etc/pacman.conf
+
+      - name: Install Python and essential tools
+        run: |
+          pacman -Sy --noconfirm git base-devel squashfs-tools dosfstools mtools arch-install-scripts xorriso wget rclone
+
+      - name: Verify Environment
+        run: |
+          uname -a
+          cat /etc/arch-release
+          gcc --version
+      - name: Build
+        run: |
+          bash ./build.sh
